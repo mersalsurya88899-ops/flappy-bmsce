@@ -24,6 +24,8 @@ The core game mechanics such as physics, collision detection, scoring system, gr
 
 ## ▶️ Live Demo
 👉 https://mersalsurya88899-ops.github.io/flappy-bird-bmsce/
+👉 https://mersalsurya88899-ops.github.io/flappy-bird-bmsce/
+👉 https://mersalsurya88899-ops.github.io/flappy-bird-bmsce/
 
 
 ## 🎯 Controls

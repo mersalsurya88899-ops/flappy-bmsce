@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Flappy Bird Pro</title>
+<style>
+  body { margin:0; overflow:hidden; background:#70c5ce; }
+  canvas { display:block; margin:auto; background:#70c5ce; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let frame = 0;
+let score = 0;
+let coinScore = 0;
+let gameOver = false;
+let shake = 0;
+let gravityDir = 1;
+
+let dashCooldown = 0;
+let dashMax = 60;
+
+const bird = {
+  x: 80,
+  y: 300,
+  r: 12,
+  gravity: 0.5,
+  lift: -8,
+  velocity: 0
+};
+
+let pipes = [];
+let coins = [];
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") flap();
+  if (e.code === "ShiftLeft") dash();
+});
+canvas.addEventListener("click", flap);
+
+function flap() {
+  if (!gameOver) bird.velocity = bird.lift * gravityDir;
+  else resetGame();
+}
+
+function dash() {
+  if (dashCooldown === 0 && !gameOver) {
+    bird.x += 40;
+    dashCooldown = dashMax;
+  }
+}
+
+function resetGame() {
+  bird.y = 300;
+  bird.velocity = 0;
+  score = 0;
+  coinScore = 0;
+  gravityDir = 1;
+  pipes = [];
+  coins = [];
+  frame = 0;
+  gameOver = false;
+}
+
+function spawnPipe() {
+  let gap = 150;
+  let topHeight = Math.random() * 250 + 50;
+
+  pipes.push({
+    x: canvas.width,
+    top: topHeight,
+    bottom: canvas.height - topHeight - gap,
+    passed: false
+  });
+
+  // coin in gap
+  coins.push({
+    x: canvas.width + 40,
+    y: topHeight + gap / 2,
+    r: 8,
+    collected: false
+  });
+
+  // random coin in empty space
+  if (Math.random() < 0.5) {
+    coins.push({
+      x: canvas.width + 40,
+      y: Math.random() * canvas.height,
+      r: 8,
+      collected: false
+    });
+  }
+}
+
+function crash() {
+  gameOver = true;
+  shake = 10;
+}
+
+function update() {
+  frame++;
+
+  if (frame % 90 === 0) spawnPipe();
+
+  bird.velocity += bird.gravity * gravityDir;
+  bird.y += bird.velocity;
+
+  if (bird.y + bird.r > canvas.height || bird.y - bird.r < 0) crash();
+
+  pipes.forEach(pipe => {
+    pipe.x -= 3;
+
+    if (!pipe.passed && pipe.x + 60 < bird.x) {
+      score += 1;
+      pipe.passed = true;
+
+      if (score % 15 === 0) gravityDir *= -1;
+    }
+
+    if (
+      bird.x + bird.r > pipe.x &&
+      bird.x - bird.r < pipe.x + 60 &&
+      (bird.y - bird.r < pipe.top ||
+        bird.y + bird.r > canvas.height - pipe.bottom)
+    ) crash();
+  });
+
+  coins.forEach(coin => {
+    coin.x -= 3;
+
+    if (!coin.collected) {
+      let dx = bird.x - coin.x;
+      let dy = bird.y - coin.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < bird.r + coin.r) {
+        coin.collected = true;
+        coinScore++;
+      }
+    }
+  });
+
+  if (dashCooldown > 0) dashCooldown--;
+}
+
+function draw() {
+  if (shake > 0) {
+    ctx.save();
+    ctx.translate(Math.random() * shake - shake / 2, Math.random() * shake - shake / 2);
+    shake--;
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // pipes
+  ctx.fillStyle = "green";
+  pipes.forEach(pipe => {
+    ctx.fillRect(pipe.x, 0, 60, pipe.top);
+    ctx.fillRect(pipe.x, canvas.height - pipe.bottom, 60, pipe.bottom);
+  });
+
+  // coins
+  ctx.fillStyle = "gold";
+  coins.forEach(coin => {
+    if (!coin.collected) {
+      ctx.beginPath();
+      ctx.arc(coin.x, coin.y, coin.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  // bird color (dash cooldown)
+  if (dashCooldown > 0) ctx.fillStyle = "red";
+  else ctx.fillStyle = "yellow";
+
+  ctx.beginPath();
+  ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // UI
+  ctx.fillStyle = "black";
+  ctx.font = "18px Arial";
+  ctx.fillText("Score: " + score, 10, 25);
+  ctx.fillText("Coins: " + coinScore, 10, 50);
+  ctx.fillText(
+    "Gravity: " + (gravityDir === 1 ? "DOWN" : "UP"),
+    10,
+    75
+  );
+
+  if (gameOver) {
+    ctx.fillStyle = "black";
+    ctx.font = "28px Arial";
+    ctx.fillText("Game Over", 120, 280);
+    ctx.font = "16px Arial";
+    ctx.fillText("Click or Press Space to Restart", 70, 320);
+  }
+
+  if (shake > 0) ctx.restore();
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>

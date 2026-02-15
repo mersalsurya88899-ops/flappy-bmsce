@@ -23,7 +23,7 @@ The core game mechanics such as physics, collision detection, scoring system, gr
 - GitHub Pages for deployment
 
 ## ▶️ Live Demo
-👉 https://mersalsurya88899.github.io/flappy-bird-gravity-game/](https://mersalsurya88899-ops.github.io/flappy-bird-bmsce/
+👉 https://mersalsurya88899-ops.github.io/flappy-bird-bmsce/
 
 
 ## 🎯 Controls
